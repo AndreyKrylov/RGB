@@ -1,0 +1,269 @@
+SET ThousandSep=' ';
+SET DecimalSep=',';
+SET MoneyThousandSep=' ';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='# ##0,00 ₽;-# ##0,00 ₽';
+SET TimeFormat='h:mm:ss';
+SET DateFormat='DD.MM.YYYY';
+SET TimestampFormat='DD.MM.YYYY h:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='ru-RU';
+SET MonthNames='янв;фев;мар;апр;май;июн;июл;авг;сен;окт;ноя;дек';
+SET LongMonthNames='Январь;Февраль;Март;Апрель;Май;Июнь;Июль;Август;Сентябрь;Октябрь;Ноябрь;Декабрь';
+SET DayNames='Пн;Вт;Ср;Чт;Пт;Сб;Вс';
+SET LongDayNames='понедельник;вторник;среда;четверг;пятница;суббота;воскресенье';
+SET HidePrefix='#';
+ 
+
+
+
+[Календарь]:
+LOAD Date																as [Дата], 
+	 Year(Date) 														as [Год],
+	 Year(Date) &' '& Dual(Month(Date), Month(Date))					as [Год Месяц],
+	 Year(Date) &'-'& Dual(Month(Date), Month(Date))					as [Год-Месяц],
+	 Dual(Month(Date), 	Month(Date)) 									as [Месяц],
+
+	 Year(Date) &' '& Dual(Month(Date), Month(Date))					as [By months],
+	 Year(Date) & ' ' & Num(Week(Date), '00')							as [By weeks],
+	 Date																as [By days],
+
+//    WeekDay(Date) 																					as "День недели",
+    Year(Date)&num(Month(Date),'00') 																as "ГодМесяц",
+    Year(Date)&'-'&num(Month(Date),'00') 															as [Год-НомерМесяца],
+//    Dual(Year(Date)&'-'&Month(Date), Year(Date) * 100 + Month(Date)) 								as "Год-Месяц",
+    Dual(Month(Date) & '-' & Year(Date), Month(Date) * 10000 + Year(Date)) 							as "Месяц-Год",
+	Dual(WeekName(Date,0), WeekYear(Date) * 100 + Week(Date)) 										as "Год-Неделя",
+	Num(Year(Date) + Week(Date)/100, '0000w00', 'w') 												as ГодНеделя,
+    'Н' & Week(Date) 																				as "Неделя",
+    Week(Date) 																						as НеделяНомер,
+    	 
+    'К' & Ceil(Month(Date)/3) 																		as "Квартал",        
+    Dual(Year(Date)&'-'&'К' & Ceil(Month(Date)/3), Year(Date) & num(Ceil(Month(Date)/3), '00')) 	as "Год-Квартал",
+    Year(Date) & num(Ceil(Month(Date)/3), '00') 													as ГодКвартал,
+    Dual('К' & Ceil(Month(Date)/3) & '-' & Year(Date), Num(Ceil(Month(Date)/3), '00') & Year(Date)) as "Квартал-Год",
+
+    'T' & Ceil(Month(Date)/4) 																		as "Триместр", 
+     Num(Year(Date) + Ceil(Month(Date)/4)/10, '0000T0', 'T') 										as ГодТриместр,
+    
+    'П' & Ceil(Month(Date)/6) 																		as "Полугодие",
+    Dual(Year(Date)&'-'&'П' & Ceil(Month(Date)/6), Year(Date) & num(Ceil(Month(Date)/6), '00')) 	as "Год-Полугодие",
+    Dual('П' & Ceil(Month(Date)/6) & '-' & Year(Date), Num(Ceil(Month(Date)/6), '00') & Year(Date)) as 'Полугодие-Год',
+    if( num(WeekDay(Date))=6, 1, 0) 																as IsWeekend,
+
+	'W' & AutoNumber(Week(Date), Year(Date) & MonthName(Date)) 										as MonthWeek, 
+	'W' & AutoNumber(If(Week(Date-4) = Week(YearEnd(Date-4)) and Floor(YearEnd(Date-4)) - 
+		Floor(WeekStart(Date-4)-1) < 7, 1, Week(Date-4)), Year(Date) & Month(Date)) 				as MonthWeekCorp,
+	Dual(Year(Date) &' '& Pick(Match(Num(Month(Date)), 1,2,3,4,5,6,7,8,9,10,11,12), 
+		'DJ','FM','FM','AM','AM','JJ','JJ','AS','AS','ON','ON','DJ'), Year(Date) & 
+			If(Num(Month(Date)) = 1, 6, floor(Num(Month(Date)) / 2))) 								as ГодДваМесяца,
+    	 
+	 Year(Date) & ' ' & Num(Week(Date), '00')							as [Год Неделя],
+	 Dual(WeekDay(Date), WeekDay(Date)) 								as [День недели],
+	 Day(Date) 															as [Число];
+LOAD Date('01.01.2013' + IterNo() - 1) as [Date] AutoGenerate 1 While Date('01.01.2013' + IterNo() - 1) < YearEnd(AddMonths(Today(), 2));
+
+LOAD ВыручкаИСебестоимостьПродаж.Активность, 
+     ВыручкаИСебестоимостьПродаж.АналитикаУчетаНоменклатуры.Ссылка, 
+     ВыручкаИСебестоимостьПродаж.АналитикаУчетаПоПартнерам.Ссылка, 
+     ВыручкаИСебестоимостьПродаж.ВалютаВзаиморасчетов, 
+     ВыручкаИСебестоимостьПродаж.ВалютаДокумента, 
+     ВыручкаИСебестоимостьПродаж.Договор.Ссылка, 
+     ВыручкаИСебестоимостьПродаж.ЗаказКлиента.Ссылка, 
+     ВыручкаИСебестоимостьПродаж.Количество								as [Units], 
+     ВыручкаИСебестоимостьПродаж.Период									as [Дата], 
+//     ВыручкаИСебестоимостьПродаж.Подразделение.Ссылка,
+     ВыручкаИСебестоимостьПродаж.Склад									as [Склад], 
+     ВыручкаИСебестоимостьПродаж.Стоимость, 
+     ВыручкаИСебестоимостьПродаж.СтоимостьБезНДС, 
+     ВыручкаИСебестоимостьПродаж.СтоимостьРегл, 
+     ВыручкаИСебестоимостьПродаж.СтоимостьУпр, 
+     ВыручкаИСебестоимостьПродаж.СуммаАвтоматическойСкидки				as [Сумма автоматической скидки], 
+     ВыручкаИСебестоимостьПродаж.СуммаВыручки							as [Net Sales], 
+     ВыручкаИСебестоимостьПродаж.СуммаВыручкиБезНДС						as [Net Revenue], 
+     ВыручкаИСебестоимостьПродаж.СуммаРучнойСкидки						as [Сумма ручной скидки], 
+     ВыручкаИСебестоимостьПродаж.ХозяйственнаяОперация					as [Хозяйственная операция]
+FROM [D:\QlikView\QVD\ERP\РегистрНакопления.ВыручкаИСебестоимостьПродаж.qvd] (qvd);
+Left Join LOAD Null() as [Вес] AutoGenerate 1;
+
+LOAD ЗаказКлиента.RGB_ТорговаяКоманда.Ссылка, 
+     ЗаказКлиента.АдресДоставки, 
+     ЗаказКлиента.Валюта, 
+     ЗаказКлиента.Дата, 
+     ЗаказКлиента.Договор.Ссылка, 
+     ЗаказКлиента.Касса, 
+     ЗаказКлиента.Комментарий, 
+     ЗаказКлиента.Контрагент.Ссылка, 
+     ЗаказКлиента.Номер, 
+     ЗаказКлиента.Организация.Ссылка, 
+     ЗаказКлиента.Партнер.Ссылка, 
+     ЗаказКлиента.Подразделение.Ссылка, 
+     ЗаказКлиента.Склад.Ссылка, 
+     ЗаказКлиента.Соглашение.Ссылка, 
+     ЗаказКлиента.Ссылка 												as ВыручкаИСебестоимостьПродаж.ЗаказКлиента.Ссылка
+FROM [D:\QlikView\QVD\ERP\Документ.ЗаказКлиента.qvd] (qvd) Where Exists(ВыручкаИСебестоимостьПродаж.ЗаказКлиента.Ссылка, ЗаказКлиента.Ссылка);
+Left Join
+LOAD Дата																as [ЗаказКлиента.Дата], 
+     RGB_ТорговыеКомандыИФизическиеЛица.ТорговаяКоманда.Ссылка			as [ЗаказКлиента.RGB_ТорговаяКоманда.Ссылка], 
+     RGB_ТорговыеКомандыИФизическиеЛица.ФизическоеЛицо					as [CR] 
+//     RGB_ТорговыеКомандыИФизическиеЛица.ФизическоеЛицо.Ссылка
+FROM [D:\QlikView\QVD\ERP\# СотрудникиКоманды.qvd] (qvd);
+
+LOAD КлючиАналитикиУчетаНоменклатуры.Номенклатура.Ссылка, 
+     КлючиАналитикиУчетаНоменклатуры.Ссылка  							as ВыручкаИСебестоимостьПродаж.АналитикаУчетаНоменклатуры.Ссылка,
+     КлючиАналитикиУчетаНоменклатуры.Характеристика.Ссылка
+FROM [D:\QlikView\QVD\ERP\Справочник.КлючиАналитикиУчетаНоменклатуры.qvd] (qvd) Where Exists(ВыручкаИСебестоимостьПродаж.АналитикаУчетаНоменклатуры.Ссылка, КлючиАналитикиУчетаНоменклатуры.Ссылка);
+
+LOAD Номенклатура.RGB_КодКПВЭД 											as [Код КПВЭД], 
+     Номенклатура.RGB_КодСКПП											as [Код СКПП], 
+     Номенклатура.RGB_Суббренд 											as [SubBrands], 
+     Номенклатура.RGB_Суббренд.Ссылка, 
+     Номенклатура.Артикул												as [Артикул короткий], 
+     Номенклатура.ВесЗнаменатель, 
+     Номенклатура.ВесЧислитель, 
+     Номенклатура.ВидНоменклатуры										as [Goods Type], 
+//     Номенклатура.Код, 
+     Номенклатура.КодОКВЭД												as [Код ОКВЭД], 
+     Номенклатура.КодТНВЭД												as [Код ТНВЭД], 
+     Номенклатура.КоэффициентЕдиницыДляОтчетов, 
+     Номенклатура.Марка													as [Brands], 
+     Номенклатура.Марка.Ссылка, 
+     Номенклатура.НаборУпаковок.Ссылка, 
+     Номенклатура.Наименование											as [SKU 1C], 
+     Номенклатура.СрокГодности											as [Срок годности], 
+     Номенклатура.Ссылка  												as [КлючиАналитикиУчетаНоменклатуры.Номенклатура.Ссылка], 
+     Номенклатура.ТипНоменклатуры										as [Тип номенклатуры]
+FROM [D:\QlikView\QVD\ERP\Справочник.Номенклатура.qvd] (qvd)  			Where Exists(КлючиАналитикиУчетаНоменклатуры.Номенклатура.Ссылка, Номенклатура.Ссылка);
+
+LOAD Номенклатура.Ссылка												as [КлючиАналитикиУчетаНоменклатуры.Номенклатура.Ссылка], 
+     [Номенклатура.ДополнительныеРеквизиты.Формат(ГотоваяПродукция)]	as [Pack Size], 
+     [Номенклатура.ДополнительныеРеквизиты.Вкус(ГотоваяПродукция)]		as [Flavour]
+FROM [D:\QlikView\QVD\ERP\Справочник.Номенклатура.ДополнительныеРеквизиты.qvd] (qvd);
+
+LOAD RGB_ПриложениеКНоменклатуре.ВесЕдиницыБрутто						as [ВесЕдиницыБрутто], 
+     RGB_ПриложениеКНоменклатуре.ВесЕдиницыНетто						as [ВесЕдиницыНетто], 
+     RGB_ПриложениеКНоменклатуре.ВесКейсаБрутто							as [ВесКейсаБрутто], 
+     RGB_ПриложениеКНоменклатуре.ВесКейсаНетто							as [ВесКейсаНетто], 
+     RGB_ПриложениеКНоменклатуре.ВесПаллетыБрутто						as [ВесПаллетыБрутто], 
+     RGB_ПриложениеКНоменклатуре.ВесПаллетыНетто						as [ВесПаллетыНетто], 
+     RGB_ПриложениеКНоменклатуре.Владелец.Ссылка						as [КлючиАналитикиУчетаНоменклатуры.Номенклатура.Ссылка], 
+     Num(RGB_ПриложениеКНоменклатуре.КоличествоВКейсе)					as [Case Size], 
+     RGB_ПриложениеКНоменклатуре.КоличествоВПаллете						as [КоличествоВПаллете], 
+     RGB_ПриложениеКНоменклатуре.Наименование, 
+     RGB_ПриложениеКНоменклатуре.НаименованиеСГР						as [НаименованиеСГР], 
+     RGB_ПриложениеКНоменклатуре.ОбъемПаллеты							as [ОбъемПаллеты], 
+     RGB_ПриложениеКНоменклатуре.СрокХраненияЗимой						as [СрокХраненияЗимой], 
+     RGB_ПриложениеКНоменклатуре.СрокХраненияЛетом						as [СрокХраненияЛетом], 
+     RGB_ПриложениеКНоменклатуре.Ссылка
+FROM [D:\QlikView\QVD\ERP\Справочник.RGB_ПриложениеКНоменклатуре.qvd] (qvd) Where Exists(КлючиАналитикиУчетаНоменклатуры.Номенклатура.Ссылка, RGB_ПриложениеКНоменклатуре.Владелец.Ссылка);
+
+LOAD ХарактеристикиНоменклатуры.RGB_АртикулFPC							as [Артикул длинный], 
+     ХарактеристикиНоменклатуры.RGB_Вид, 
+     ХарактеристикиНоменклатуры.RGB_НазначениеПродукта					as [Pack Type], 
+     ХарактеристикиНоменклатуры.Владелец.Ссылка, 
+     ХарактеристикиНоменклатуры.Наименование, 
+     ХарактеристикиНоменклатуры.Ссылка									as КлючиАналитикиУчетаНоменклатуры.Характеристика.Ссылка 
+FROM [D:\QlikView\QVD\ERP\Справочник.ХарактеристикиНоменклатуры.qvd] (qvd);
+
+
+LOAD КлючиАналитикиУчетаПоПартнерам.Контрагент.Ссылка, 
+     КлючиАналитикиУчетаПоПартнерам.Партнер.Ссылка, 
+     КлючиАналитикиУчетаПоПартнерам.Ссылка								as ВыручкаИСебестоимостьПродаж.АналитикаУчетаПоПартнерам.Ссылка
+FROM [D:\QlikView\QVD\ERP\Справочник.КлючиАналитикиУчетаПоПартнерам.qvd] (qvd)  Where Exists(ВыручкаИСебестоимостьПродаж.АналитикаУчетаПоПартнерам.Ссылка, КлючиАналитикиУчетаПоПартнерам.Ссылка);
+
+LOAD Контрагенты.ГоловнойКонтрагент.Ссылка, 
+     Контрагенты.ИНН, 
+     Контрагенты.КБЕ, 
+     Контрагенты.КодПоОКПО, 
+     Контрагенты.КПП, 
+     Контрагенты.Наименование											as [Client], 
+     Контрагенты.Ссылка 												as [КлючиАналитикиУчетаПоПартнерам.Контрагент.Ссылка]
+FROM [D:\QlikView\QVD\ERP\Справочник.Контрагенты.qvd] (qvd)  			Where Exists(КлючиАналитикиУчетаПоПартнерам.Контрагент.Ссылка, Контрагенты.Ссылка);
+
+LOAD Партнеры.RGB_ЗонаДоставки											as [Area route], 
+     Партнеры.RGB_ИсторическийКод										as [OutletDoor2Code], 
+     Партнеры.RGB_КаналПродаж, 
+	 Партнеры.RGB_КаналПродаж.Ссылка, 
+     Партнеры.БизнесРегион.Ссылка, 
+     Партнеры.Наименование												as [Partner], 
+     Партнеры.Ссылка													as [КлючиАналитикиУчетаПоПартнерам.Партнер.Ссылка]
+FROM [D:\QlikView\QVD\ERP\Справочник.Партнеры.qvd] (qvd)  				Where Exists(КлючиАналитикиУчетаПоПартнерам.Партнер.Ссылка, Партнеры.Ссылка);
+
+LOAD Партнеры.Ссылка													as [КлючиАналитикиУчетаПоПартнерам.Партнер.Ссылка], 
+     Партнеры.КонтактнаяИнформация.Адрес								as [Address], 
+     Партнеры.КонтактнаяИнформация.ЭлектроннаяПочта, 
+     Партнеры.КонтактнаяИнформация.Телефон
+FROM [D:\QlikView\QVD\ERP\Справочник.Партнеры.КонтактнаяИнформация.qvd] (qvd);
+
+
+LOAD [ПартнерыСегмента.Сегменты соглашений 2]							as [Сегменты соглашений 2], 
+     [ПартнерыСегмента.Прочее 2]										as [Прочее 2], 
+     [ПартнерыСегмента.Программы активности 2], 
+     [ПартнерыСегмента.Каналы продаж 2]									as [DoorSubСhannel], 
+     [ПартнерыСегмента.Партнер.Ссылка]									as [КлючиАналитикиУчетаПоПартнерам.Партнер.Ссылка], 
+     [ПартнерыСегмента.Каналы продаж]									as [DoorChannel], 
+     [ПартнерыСегмента.Мэппинг номенклатуры 2]							as [Мэппинг номенклатуры 2], 
+     [ПартнерыСегмента.Мэппинг номенклатуры]							as [Мэппинг номенклатуры], 
+     [ПартнерыСегмента.Программы активности], 
+     [ПартнерыСегмента.Продажи запрещены 2]								as [SlsProhib], 
+     [ПартнерыСегмента.Продажи запрещены], 
+     [ПартнерыСегмента.Прочее], 
+     [ПартнерыСегмента.Сегменты соглашений]								as [Сегменты соглашений],
+     [ПартнерыСегмента.Значимость]										as [VolumeCategory], 
+     [ПартнерыСегмента.Размер]											as [Category (A/B/C/D)], 
+     [ПартнерыСегмента.Выставленность]									as [Visibility], 
+     [ПартнерыСегмента.Лояльность]										as [LoyaltyProgr], 
+     [ПартнерыСегмента.Временный]										as [TempAttribute] 
+FROM [D:\QlikView\QVD\ERP\# ПартнерыСегмента.qvd] (qvd) 				Where Exists(КлючиАналитикиУчетаПоПартнерам.Партнер.Ссылка, ПартнерыСегмента.Партнер.Ссылка);
+
+
+[Контрагенты]:
+LOAD Контрагенты.Наименование as ЗаказКлиента.Контрагенты.Наименование, 
+     Контрагенты.Ссылка as ЗаказКлиента.Контрагент.Ссылка
+FROM [D:\QlikView\QVD\ERP\Справочник.Контрагенты.qvd] (qvd)  			Where Exists(ЗаказКлиента.Контрагент.Ссылка, Контрагенты.Ссылка);
+
+LOAD БизнесРегионы.Наименование1  										as [BU], 
+     БизнесРегионы.Наименование2										as [Sub_BU], 
+     БизнесРегионы.Наименование3										as [Teritory], 
+     БизнесРегионы.Наименование4										as [City], 
+     БизнесРегионы.Путь, 
+     БизнесРегионы.Ссылка												as [Партнеры.БизнесРегион.Ссылка], 
+     БизнесРегионы.Родитель.Ссылка, 
+     БизнесРегионы.Наименование, 
+     БизнесРегионы.RGB_Организация, 
+     БизнесРегионы.ЗначениеГеографическогоРегиона.N
+FROM [D:\QlikView\QVD\ERP\Справочник.БизнесРегионы.qvd] (qvd);
+
+
+LOAD RGB_ТорговыеКоманды.Наименование1									as [Team], 
+     RGB_ТорговыеКоманды.Наименование2, 
+     RGB_ТорговыеКоманды.Путь, 
+     RGB_ТорговыеКоманды.Ссылка											as [ЗаказКлиента.RGB_ТорговаяКоманда.Ссылка], 
+     RGB_ТорговыеКоманды.Родитель.Ссылка, 
+     RGB_ТорговыеКоманды.Наименование									as [Маршрут], 
+     RGB_ТорговыеКоманды.Менеджер										as [Менеджер], 
+     RGB_ТорговыеКоманды.Филиал
+FROM [D:\QlikView\QVD\ERP\Справочник.RGB_ТорговыеКоманды.qvd] (qvd);
+
+
+
+vTemp = 0
+FOR vIterNo = 2 to 6; [Dims_$(vIterNo)]: LOAD Dual(SubField(Pick(Match($(vIterNo), 2, 3, 4, 5, 6), 'BU,Sub_BU,Teritory,City','DoorChannel,DoorSubСhannel,Category (A/B/C/D),LoyaltyProgr,VolumeCategory,SlsProhib,TempAttribute,Visibility,Area route,OutletDoor2Code,Partner,Client,Address','Team,CR,Маршрут','Goods Type,Тип номенклатуры,Brands,SubBrands,Case Size,Pack Type,Pack Size,Flavour,SKU 1C,Артикул короткий,Артикул длинный','By months,By weeks,By days'), ','), RowNo()+$(vTemp)) as [Dim_$(vIterNo)] AutoGenerate 1; vTemp = vTemp + NoOfRows('Dims_$(vIterNo)'); [Dims]: LOAD [Dim_$(vIterNo)] as [Dim_1] Resident [Dims_$(vIterNo)]; NEXT;
+//[Dims]: LOAD Dual(SubField('BU,Sub_BU,Teritory,City,DoorChannel,DoorSubСhannel,Category (A/B/C/D),LoyaltyProgr,VolumeCategory,SlsProhib,TempAttribute,Visibility,Area route,OutletDoor2Code,Partner,Client,Адрес,Team,CR,Маршрут,Склад,Goods Type,Тип номенклатуры,Brands,SubBrands,Case Size,Pack Type,Pack Size,Flavour,SKU 1C,Артикул короткий,Артикул длинный,By months,By weeks,By days', ','), RowNo()) as [Dim_1] AutoGenerate 1;
+[Exps]: LOAD Dual(SubField('Units,Litre/Kg,Cases,VAT,Net Revenue,Net Sales', ','), RowNo()) as [Exp_1] AutoGenerate 1;	
+
+[Table1]: LOAD Dual(SubField('Organization,Country,Branch,Area,BU,Region,Sub-BU,Territory,City,Client,Partner,OutletDoor,OutletDoor2Code,Address,Outlet&Address,Address&Outlet,DoorChannel,DoorSubСhannel,Category (A/B/C/D),LoyaltyProgr,MHS,VolumeCategory,SlsProhib,TempAttribute,Visibility,SalesCash,ВПЛЮСЕ TOTAL,График оплаты (спр),График оплаты (док),Маршрут агента,Маршрут двери', ','), RowNo()) as [_Измерение] AutoGenerate 1;
+[Table2]: LOAD Dual(SubField('Supervisor,CR team,CR,Route,Area Route,Category Sales,Brands,SubBrands,SKU/Brand,Goods Type,Promo / Regular,SKU Flash Main,SKU Flash,PushToPull,Seg4Disc,Flavour,Pack Type,Case Size,Pack Size,MHS SKU Brand,MHS SKU Group,SKU 1C,Артикул,История наименование,Рабочее наименование,Артикул длинный,Артикул короткий,MHS DS', ','), RowNo()) as [_Измерение02] AutoGenerate 1;
+[Table3]: LOAD Dual(SubField('By Days,By Months,By Year-Months,By Quarters,By Trimesters,By Half-years,By Years,By Weeks,By Month-Weeks,By Month-Weeks Corp,Week Number,Тип операции', ','), RowNo()) as [_Измерение01] AutoGenerate 1;
+[Table4]: LOAD Dual(SubField('Units,Litre/Kg,Cases,Gross Revenue,Disc. & Com.,Disc. & Com. %,Discounts,Commisions,VAT,Net Revenue,COGS,COGS_MAT,COGS_VAR,COGS_FIXED,MC,Net Sales,Population,RealIncome,NominalIncome,%MC,# of Sls Doc,# of Partners,# of Contractors,# of Outlets,# of Goods 1C,Av.Sls Doc,VPO GR,VPO NS,VPO Cs,VPO Ltr,VPO Units,VPCR GR,VPCR NS,VPCR Cs,VPCR Ltr,VPCR Units,AOP CS,AOP GR,AOP NS,AOP L/KG,AOP D&C,Δ AOP CS,Δ AOP GR,Δ AOP NS,Δ AOP L/KG,Δ AOP D&C,% AOP CS,% AOP GR,% AOP NS,% AOP L/KG,% AOP D&C,Заказано шт,Заказано тг,% выполнения шт,% выполнения тг,Кол-во дней', ','), RowNo()) as [_Выражение] AutoGenerate 1;
+
+
+TAG Fields [Dim_1], [Dim_2], [Dim_3], [Dim_4], [Dim_5], [Dim_6], [Exp_1], [_Измерение], [_Измерение01], [_Измерение02], [_Выражение] With $hidden;
+
+
+EXIT SCRIPT
+
+
