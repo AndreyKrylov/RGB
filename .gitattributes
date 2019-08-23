@@ -1,3 +1,2 @@
-*.* gitlab-language=qlikview
 [core]
-        autocrlf = true
+        autocrlf = false
