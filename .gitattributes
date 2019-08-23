@@ -1,7 +1,7 @@
 [core]
         autocrlf = false
 *               text=auto
-*.txt           text
+*.txt            text eol=lf          text
 *.vcproj        text eol=crlf
 *.sh            text eol=lf
 *.jpg           -text
