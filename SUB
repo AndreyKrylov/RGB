@@ -648,3 +648,4 @@ $(vConString);
 IF WildMatch(vSelectTypeCR, 'Select*', 'C* select') THEN; CALL ComonSelect(SubField(vSelectType01, ' ', 2)); ENDIF;
 IF WildMatch(vSelectTypeCR, 'R* select')			THEN; CALL Select('$(vRandomObject)', SubField(vSelectType01, ' ', 2), '$(vRandomSave)'); ENDIF;
 IF vSelectTypeCR like '*cript*' 					THEN; ELSE; CALL Exit; ENDIF;
+ 
