@@ -1,4 +1,3 @@
-
-git config core.autocrlf false
-SUB2.txt           -text
 *.* gitlab-language=qlikview
+[core]
+        autocrlf = true
