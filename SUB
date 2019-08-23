@@ -1,8 +1,8 @@
-SET ThousandSep=' ';
+SET ThousandSep=' ';
 SET DecimalSep=',';
-SET MoneyThousandSep=' ';
+SET MoneyThousandSep=' ';
 SET MoneyDecimalSep=',';
-SET MoneyFormat='# ##0,00р.;-# ##0,00р.';
+SET MoneyFormat='# ##0,00р.;-# ##0,00р.';
 SET TimeFormat='h:mm:ss';
 SET DateFormat='DD.MM.YYYY';
 SET TimestampFormat='DD.MM.YYYY h:mm:ss[.fff]';
@@ -202,7 +202,7 @@ ENDSUB
 //*********************************************************************************************************************************************************
 SUB LeftJoin(vTABLE, vSTRING, vDELETE,   vNoOfRowsAfter,vNoOfRowsBefore,vDropTable) 
 	vNoOfRowsBefore = NoOfRows('$(vTABLE)'); Left Join([$(vTABLE)]) $(vSTRING); vNoOfRowsAfter 	= NoOfRows('$(vTABLE)') - vNoOfRowsBefore;
-	IF vNoOfRowsAfter <> 0 THEN; TRACE;TRACE	✓	Количество строк в  $(vTABLE)  изменилось на $(vNoOfRowsAfter)!!!; TRACE; ENDIF
+	IF vNoOfRowsAfter <> 0 THEN; TRACE;TRACE	?	Количество строк в  $(vTABLE)  изменилось на $(vNoOfRowsAfter)!!!; TRACE; ENDIF
 	vDropTable = Trim(Right(vSTRING, Len(SubField(Lower(vSTRING), If(SubStringCount(Lower(vSTRING), ' resident ') > 0, ' resident ', ' from '), 2)))); vDropTable = PurgeChar(Trim(SubField(vDropTable, If(Left(vDropTable, 1) = '[', ']', ' '), 1)), '[');
 	IF vDELETE and NoOfRows('$(vDropTable)') > 0 THEN; DROP Table [$(vDropTable)]; ENDIF; CALL DropVars('vTABLE, vSTRING, vDELETE'); 
 ENDSUB
@@ -541,7 +541,7 @@ SUB IntervalMatch(vTABLE, vFIELD, vCALENDAR,	vTableName,vNoOfRowsBefore,vNoOfRow
 	IF FieldNumber(vTableName & '.ПериодВремя', vTABLE) > 0 THEN
 		[TEMP]: LOAD *,  If([$(vFIELD)] = Previous([$(vFIELD)]) and Date([$(vTableName).Период]) = Date(Previous([$(vTableName).Период])), 1, 0) as [DELETE] Resident [$(vTABLE)] Order By [$(vFIELD)], [$(vTableName).ПериодВремя] desc; 
 		DROP Table [$(vTABLE)]; vNoOfRowsBefore = NoOfRows('TEMP'); Inner Join (TEMP) LOAD 0 as [DELETE] AutoGenerate 1; DROP Fields [DELETE], [$(vTableName).ПериодВремя]; RENAME Table [TEMP] to [$(vTABLE)]; 
-		vNoOfRows = NoOfRows('$(vTABLE)') - vNoOfRowsBefore; IF vNoOfRows <> 0 THEN; TRACE;TRACE	✓	Количество строк в  $(vTABLE) изменилось на $(vNoOfRows); TRACE; ENDIF
+		vNoOfRows = NoOfRows('$(vTABLE)') - vNoOfRowsBefore; IF vNoOfRows <> 0 THEN; TRACE;TRACE	?	Количество строк в  $(vTABLE) изменилось на $(vNoOfRows); TRACE; ENDIF
 	ENDIF; 
 	NoConcatenate [TEMP]: LOAD *, [$(vTableName).Период] as [ДатаНач], If([$(vFIELD)] = Previous([$(vFIELD)]), Date(Previous([$(vTableName).Период])-1), Date(Today() + 100)) as [ДатаКон] Resident [$(vTABLE)] 
 	Where not Match('00000000000000000000000000000000', [$(vFIELD)]) and Len([$(vFIELD)]) > 0 Order By [$(vFIELD)], [$(vTableName).Период] desc; DROP Table [$(vTABLE)]; RENAME Table [TEMP] to [$(vTABLE)]; DROP Fields [$(vTableName).Период] From [$(vTABLE)];
@@ -648,4 +648,3 @@ $(vConString);
 IF WildMatch(vSelectTypeCR, 'Select*', 'C* select') THEN; CALL ComonSelect(SubField(vSelectType01, ' ', 2)); ENDIF;
 IF WildMatch(vSelectTypeCR, 'R* select')			THEN; CALL Select('$(vRandomObject)', SubField(vSelectType01, ' ', 2), '$(vRandomSave)'); ENDIF;
 IF vSelectTypeCR like '*cript*' 					THEN; ELSE; CALL Exit; ENDIF;
-
