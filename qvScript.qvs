@@ -1,5 +1,5 @@
 ﻿// qvScript
-
+ 
 SUB Загрузка;
 
 	LET vQvPath						= 'c:\QlikView';
