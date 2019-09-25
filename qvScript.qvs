@@ -102,7 +102,7 @@ SUB НастройкиОтчета									//	Загрузка настроек 
 		IF lookup('Variables.Definition', 'Variables.Name', 'vDocuments.ActualDate' , 'Table.171') = 'Reload' then; LET vDocuments.ActualDate = Now(); DROP Table [Table.171]; ENDIF;  
 	IF	FieldIndex( 'Таблица', 'Languages' ) 		then; [Table.172] 			:SELECT [LangField],	[StringNo],	[Русский],	[English]																																											FROM [Панель инструментов] Where len([StringNo])								> 0;	ENDIF;
 ENDSUB
-
+  
 //*
 SUB Календарь												//	Загрузка календаря
 	IF	FieldIndex( 'Таблица', 'Календарь' ) 					then; [Календарь]   		:LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] 									(qvd) where  Дата >= $(НачальнаяДатаОтчета) and Дата <= $(ПоследняяДатаОтчета);  										ENDIF	
