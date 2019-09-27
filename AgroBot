@@ -154,22 +154,19 @@ def GetReports_(report_user, chat_id):
     QvApp.Quit()
     vWait = ""
 def GetReports(report_user, chat_id):
-    # if report_user == "admin" or chat_id == 848777680:
-    #     report_user = "Долинко" #Григорьева" #"('Хорина'|'Долинко')" Ашимбаева Карсалиева
     conn = sqlite3.connect('Users.sqlite')
     cursor = conn.cursor()
-    # print(report_user)
-    cursor.execute("SELECT Report FROM Reports WHERE User = ?", (report_user,))
     InlineKeyboard = telebot.types.InlineKeyboardMarkup()
-    # if str(InlineKeyboard.keyboard) == "[]":
-    count = 1
-    for row in cursor.fetchall():
-        report_name = str(row).split("'")[1]
-        # print(report_name)
-        globals()["btn_p" + str(count)] = telebot.types.InlineKeyboardButton(text=report_name, callback_data=report_name)
-        InlineKeyboard.add(globals()["btn_p" + str(count)])
-        count += 1
-    bot.send_message(chat_id, ai_answer('Команда показа кнопок'), reply_markup=InlineKeyboard)
+    if len(cursor.execute("SELECT Report FROM Reports WHERE User = ?", (report_user,)).fetchall()) == 0:
+        bot.send_message(chat_id, ai_answer('Выражение 1')) #ai_answer('Команда показа кнопок') Команда нет отчетов
+    else:
+        count = 1
+        for row in cursor.execute("SELECT Report FROM Reports WHERE User = ?", (report_user,)).fetchall():
+            report_name = str(row).split("'")[1]
+            globals()["btn_p" + str(count)] = telebot.types.InlineKeyboardButton(text=report_name, callback_data=report_name)
+            InlineKeyboard.add(globals()["btn_p" + str(count)])
+            count += 1
+        bot.send_message(chat_id, ai_answer('Команда показа кнопок'), reply_markup=InlineKeyboard)
 def CheckUser(id):
     conn = sqlite3.connect('Users.sqlite')
     cursor = conn.cursor()
