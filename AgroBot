@@ -1,0 +1,183 @@
+import telebot, apiai, json, sqlite3, subprocess, pythoncom, time, re, logging, pandas
+
+from tempfile import TemporaryDirectory
+from pathlib import Path
+from time import gmtime, strftime
+from win32com.client import Dispatch
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler)
+from datetime import datetime, time as datetime_time, timedelta
+
+bot = telebot.TeleBot('802481459:AAE_04hJHzkXwtQ5fyiK7iTLiAUf3XCwYEs')
+ReplyKeyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+InlineKeyboard = telebot.types.InlineKeyboardMarkup()
+QvApp = QvDoc = vWait = vButtonData = vUser = ""
+str1 = str2 = str3 = str4 = str5 = str6 = ""
+ReplyKeyboard.row("Да", "Нет")
+
+@bot.callback_query_handler(lambda query: query.data)
+def process_callback_2(query):
+    global vButtonData
+    vButtonData = query
+    sent = bot.send_message(query.from_user.id, ai_answer('Текст подтверждения').replace('@', '"'+str(query.data)+'"'), reply_markup=ReplyKeyboard) #+ '" на почту?', reply_markup=ReplyKeyboard)
+    bot.register_next_step_handler(sent, SendReport)
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    global str1, str2, str3, str4, str5, str6, str7
+    user_data = CheckUser(message.chat.id)
+    if not user_data is None:
+        print(GetRepUser(message.chat.id) + " - вход: " + strftime("%m/%d/%Y %H:%M"))
+        bot.send_message(message.from_user.id, ai_answer("Привет"))
+        # report_user = GetRepUser(message.chat.id)
+        # GetReports(report_user, message.chat.id)
+    else:
+        str1 =  message.from_user.id; str2 = message.from_user.first_name; str3 = message.from_user.last_name
+        PutToBase("INSERT")
+        sent = bot.send_message(message.chat.id, 'Привет, мы еще не знакомы, напиши свое имя.')
+        bot.register_next_step_handler(sent, FirstName)
+@bot.message_handler(content_types=['text'])
+def send_text(message):
+    response = ai_answer(message.text)
+    if response == "Список отчетов":
+        GetReports(GetRepUser(message.chat.id), message.chat.id)
+    elif (response == "Карсалиева" or response == "Долинко" or response == "Григорьева" or response == "Хорина") and message.chat.id == 848777680:
+        GetReports(response, message.chat.id)
+    else:
+        if response:
+            bot.send_message(chat_id=message.chat.id, text=response)
+        else:
+            bot.send_message(chat_id=message.chat.id, text=ai_answer('Абракадабра'))
+@bot.message_handler(content_types=['sticker'])
+def sticker_id(message):
+    print(message)
+    pass
+
+def elapsed_interval(start,end):
+    elapsed = end - start
+    min,secs=divmod(elapsed.days * 86400 + elapsed.seconds, 60)
+    hour, minutes = divmod(min, 60)
+    # return '%.2d:%.2d:%.2d' % (hour,minutes,secs)
+    # return '%.dмин %.dсек ' % (minutes,secs)
+    if minutes > 0:
+        return '%.dмин %.dсек ' % (minutes, secs)
+    else:
+         return '%.dсек ' % (secs)
+def ai_answer(text):
+    request = apiai.ApiAI('eac0c21b9e14441ba7968ea7b40350a8').text_request() # Токен API к Dialogflow
+    request.lang = 'ru' # На каком языке будет послан запрос
+    request.session_id = 'BatlabAIBot' # ID Сессии диалога (нужно, чтобы потом учить бота)
+    request.query = text # Посылаем запрос к ИИ с сообщением от юзера
+    responseJson = json.loads(request.getresponse().read().decode('utf-8'))
+    return responseJson['result']['fulfillment']['speech'] # Разбираем JSON и вытаскиваем ответ
+def FirstName(message):
+    global str1, str2, str3, str4, str5, str6
+    str2 = message.text
+    PutToBase("UPDATE")
+    sent = bot.send_message(message.chat.id, 'Ок, мне нужна еще фамилия.')
+    bot.register_next_step_handler(sent, LastName)
+def LastName(message):
+    global str1, str2, str3, str4, str5, str6
+    str3 = message.text; str6 = message.text
+    PutToBase("UPDATE")
+    GetReports(str6, str1)
+def PutToBase(vAction):
+    conn = sqlite3.connect('Users.sqlite')
+    cursor = conn.cursor()
+    global str1, str2, str3, str4, str5, str6
+    if vAction == "INSERT":
+        cursor.execute("INSERT INTO Users (user_id, first_name, last_name, os_user, email, report_user) VALUES (?, ?, ?, ?, ?, ?);", (str1, str2, str3, str4, str5, str6,))
+    else:
+        cursor.execute("UPDATE Users SET first_name=?, last_name=?, report_user=? WHERE user_id=?;", (str2, str3, str3, str1))
+    conn.commit()
+def SendReport(message):
+    query = vButtonData
+    if message.text == "Да":
+        start = datetime.now()
+        bot.send_message(query.from_user.id, ai_answer("Работай"))
+        global QvApp, vWait
+        pythoncom.CoInitialize()
+        while vWait != "":
+            time.sleep(1)
+        vWait = 1
+        QvApp = Dispatch('QlikTech.QlikView')
+        QvDoc = QvApp.OpenDoc("c:\QlikView\QVW\Console.qvw")
+        QvDoc.Variables("MailFlag").SetContent("B", 1)
+
+        if GetRepUser(query.from_user.id) == "admin" or query.from_user.id == 848777680:
+            QvDoc.Fields("eMails").Select("andrewkrylov@mail.ru")
+            QvDoc.Fields("ReportSets").Select("Перенаправить")
+
+        QvDoc.Fields("XlsDescr").Select(query.data)  # (query.data.split(":")[1] + "*"
+        QvDoc.GetSheetObject("SendReports").Press()
+        counter = 1
+        while QvDoc.Variables("MailFlag").GetContent().String == "B":
+            time.sleep(5)
+            if counter % 4 == 0:
+                 bot.send_message(query.from_user.id, ai_answer("Ожидаю"))
+            counter += 1
+        QvDoc.CloseDoc()
+        QvApp.Quit()
+        QvApp = vWait = ""
+        bot.send_message(query.from_user.id, ai_answer("Текст после отправки")) #'Отчет сформирован отправлен' + " за  " + elapsed_interval(start, datetime.now())) #+ ")")
+        print(str(query.from_user.id) + " - отправка отчета '" + str(query.data) + "': " + str(
+            strftime("%m/%d/%Y %H:%M")) + " (" + elapsed_interval(start, datetime.now()) + ")")
+        pass
+    else:
+        bot.send_message(query.from_user.id, ai_answer("Нет"))
+def GetRepUser(chat_id):
+    user_data = CheckUser(chat_id)
+    return str(user_data).split(",")[5].replace(")", "").replace("(", "").replace("'", "").replace(" ", "")
+def GetReports_(report_user, chat_id):
+    if report_user == "admin" or chat_id == 848777680:
+        report_user = "Долинко" #Григорьева" #"('Хорина'|'Долинко')" Ашимбаева Карсалиева
+    global vWait
+    pythoncom.CoInitialize()
+    while vWait != "":
+        time.sleep(1)
+    vWait = 1
+    QvApp = Dispatch('QlikTech.QlikView')
+    QvDoc = QvApp.OpenDoc("c:\QlikView\QVW\Console.qvw")
+    if str(QvDoc.Evaluate("=if(WildMatch('"+ report_user +"', $(='''' & Concat({1}XlsName, ''',''') & '''')), 1, 0)")) == str(0):
+        bot.send_message(chat_id, 'У вас еще нет отчетов.')
+    else:
+        QvDoc.Fields("XlsName").Select(report_user)
+        # QvDoc.Fields("XlsDescr").SelectPossible()
+        vReports = QvDoc.Fields("XlsDescr").GetPossibleValues()
+        if str(InlineKeyboard.keyboard) == "[]":
+            count = 0
+            while count < vReports.Count:
+                report_name = vReports.Item(count).Text #[:33] #.replace("(", "").replace(")", "")
+                callback_data = report_name[:34]
+                globals()["btn_p" + str(count+1)] = telebot.types.InlineKeyboardButton(text=report_name, callback_data=callback_data)
+                InlineKeyboard.add(globals()["btn_p" + str(count+1)])
+                count += 1
+        bot.send_message(chat_id,  ai_answer('Команда показа кнопок'), reply_markup=InlineKeyboard)
+    QvApp.Quit()
+    vWait = ""
+def GetReports(report_user, chat_id):
+    # if report_user == "admin" or chat_id == 848777680:
+    #     report_user = "Долинко" #Григорьева" #"('Хорина'|'Долинко')" Ашимбаева Карсалиева
+    conn = sqlite3.connect('Users.sqlite')
+    cursor = conn.cursor()
+    # print(report_user)
+    cursor.execute("SELECT Report FROM Reports WHERE User = ?", (report_user,))
+    InlineKeyboard = telebot.types.InlineKeyboardMarkup()
+    # if str(InlineKeyboard.keyboard) == "[]":
+    count = 1
+    for row in cursor.fetchall():
+        report_name = str(row).split("'")[1]
+        # print(report_name)
+        globals()["btn_p" + str(count)] = telebot.types.InlineKeyboardButton(text=report_name, callback_data=report_name)
+        InlineKeyboard.add(globals()["btn_p" + str(count)])
+        count += 1
+    bot.send_message(chat_id, ai_answer('Команда показа кнопок'), reply_markup=InlineKeyboard)
+def CheckUser(id):
+    conn = sqlite3.connect('Users.sqlite')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Users WHERE user_id = ?", (id,))
+        user_data = cursor.fetchone()
+    except sqlite3.DatabaseError as error:
+        print("Error:", error)
+    return user_data
+
+bot.polling(none_stop=True, timeout=123)
