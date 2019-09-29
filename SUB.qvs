@@ -148,12 +148,12 @@ SUB Select(vOBJECT, vSELECT, vSTORE, 	vTable,i,vSelectNo,vSelectType,vParam,vMar
 			CALL GenericTable('$(vOBJECT)', SubField(vTable1C_2, '.', 1) & '.Ссылка', '$(vTable1C_2)' & '.' & '$(vAtribute)',  '$(vTable1C_2)' & '.' & '$(vValue)', '1')
 		ENDIF // 
 		IF NoOfRows('$(vTable)') > 0 THEN
-			IF not vPartLoad 				THEN; CALL DropNullFields	('$(vTable)'); 																				ENDIF
-			IF 0 							THEN; CALL DropEmptyFields	('$(vTable)'); 																				ENDIF
 			IF Len(vJoinEnumes) > 0 		THEN; CALL AddEnumes		('$(vTable)', '$(vJoinEnumes)', '$(vJoinTables)'); 											ENDIF 
 			IF Len(vJoinTypes)  > 0 		THEN; CALL AddTypes			('$(vTable)', '$(vJoinTypes)'); 															ENDIF 
 			IF Len(vTypeFields) > 0 		THEN; CALL AddObjectType	('$(vTable)', If(vOBJECT like 'Регистр*', 1, 0), Right(vTypeFields, Len(vTypeFields) - 2)); ENDIF
 			IF vOBJECT like 'Справочник.*' 	THEN; CALL FillEmptyValues	('$(vTable)'); 																				ENDIF
+			IF not vPartLoad 				THEN; CALL DropNullFields	('$(vTable)'); 																				ENDIF
+			IF 0 							THEN; CALL DropEmptyFields	('$(vTable)'); 																				ENDIF
 			IF vStore 						THEN; CALL Store			('$(vTable)', '1', If(vPartLoad and vLoadType = 'Day', '$(vLimitField)', 0)); 				ENDIF
 		ENDIF
 	LOOP WHILE vLoop < 2
