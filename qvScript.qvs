@@ -45,20 +45,24 @@ SUB QvSqlConnection
 ENDSUB
 SUB SectionAccess
 	[Table.97]: SELECT $(Номер документа) as [Field.01]  FROM [Таблицы] Where $(vDocCondition) and [Таблица] = 'SectionAccess'; LET vAccessIndex = SubField(peek('Field.01'), Chr(10), 2); DROP Table [Table.97]; // LOAD MsgBox ('$(vAccessIndex)') autogenerate 1;
-	IF index(vAccessIndex, 'O') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Организации.qvd]  	(qvd); [Table.99]: LOAD Concat(Distinct trim([РНН организации]),  Chr(10)) as [LoadList] Resident [Table.98]; LET СписокРНН = mid(peek('LoadList'), 2); DROP Tables [Table.98], [Table.99]; ENDIF
-	IF index(vAccessIndex, 'K') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Контрагенты.qvd]  	(qvd); [Table.99]: LOAD Concat(Distinct trim([Контрагенты.Вид]),  Chr(10)) as [LoadList] Resident [Table.98]; LET СписокКон = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
-	IF index(vAccessIndex, 'S') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Склады.qvd] 	 	(qvd); [Table.99]: LOAD Concat(Distinct trim([Склады.Вид]), 	  Chr(10)) as [LoadList] Resident [Table.98]; LET СписокСкл = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
-	IF index(vAccessIndex, 'N') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Номенклатура.qvd] 	(qvd); [Table.99]: LOAD Concat(Distinct trim([Номенклатура.Вид]), Chr(10)) as [LoadList] Resident [Table.98]; LET СписокНом = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
-	IF index(vAccessIndex, 'Y') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] (qvd) Where Дата >= '01.01.2006'; [Table.99]: LOAD Concat(Distinct trim([Годы]), 		  Chr(10)) as [LoadList] Resident [Table.98]; LET СписокГод = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
+	IF index(vAccessIndex, 'O') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Организации.qvd]  	(qvd); [Table.99]: LOAD Concat(Distinct trim([РНН организации]),  			Chr(10)) as [LoadList] Resident [Table.98]; LET СписокРНН = mid(peek('LoadList'), 2); DROP Tables [Table.98], [Table.99]; ENDIF
+	IF index(vAccessIndex, 'K') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Контрагенты.qvd]  	(qvd); [Table.99]: LOAD Concat(Distinct trim([Контрагенты.Вид]),  			Chr(10)) as [LoadList] Resident [Table.98]; LET СписокКон = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
+	IF index(vAccessIndex, 'S') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Склады.qvd] 	 	(qvd); [Table.99]: LOAD Concat(Distinct trim([Склады.Вид]), 	  			Chr(10)) as [LoadList] Resident [Table.98]; LET СписокСкл = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
+	IF index(vAccessIndex, 'N') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Номенклатура.qvd] 	(qvd); [Table.99]: LOAD Concat(Distinct trim([Номенклатура.Вид]), 			Chr(10)) as [LoadList] Resident [Table.98]; LET СписокНом = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
+	IF index(vAccessIndex, 'G') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\Справочники\Номенклатура.qvd] 	(qvd); [Table.99]: LOAD Concat(Distinct trim([Номенклатура.ГруппаДоступа]), Chr(10)) as [LoadList] Resident [Table.98]; LET СписокНгр = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
+	IF index(vAccessIndex, 'Y') > 0 then; [Table.98]:	LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] (qvd) Where Дата >= '01.01.2006'; [Table.99]: LOAD Concat(Distinct trim([Годы]), Chr(10)) as [LoadList] Resident [Table.98]; LET СписокГод = mid(peek('LoadList'), 1); DROP Tables [Table.98], [Table.99]; ENDIF
 	IF index(vAccessIndex, '#') > 0 then; LET Var = '1 as [Key]'; ELSE; 
-	LET Var = mid(if(index(vAccessIndex, 'O') > 0, ' &''|''& SubField(if([РНН организации]  = ''*'', ''$' & '(СписокРНН)'', [РНН организации]),  Chr(10))') & 
-				  if(index(vAccessIndex, 'K') > 0, ' &''|''& SubField(if([Контрагенты.Вид]  = ''*'', ''$' & '(СписокКон)'', [Контрагенты.Вид]),  Chr(10))') &
-				  if(index(vAccessIndex, 'S') > 0, ' &''|''& SubField(if([Склады.Вид]  		= ''*'', ''$' & '(СписокСкл)'', [Склады.Вид]),  	 Chr(10))') & 
-				  if(index(vAccessIndex, 'N') > 0, ' &''|''& SubField(if([Номенклатура.Вид] = ''*'', ''$' & '(СписокНом)'', [Номенклатура.Вид]), Chr(10))') &
-				  if(index(vAccessIndex, 'Y') > 0, ' &''|''& SubField(if([Период] 			= ''*'', ''$' & '(СписокГод)'', [Период]), 			 Chr(10))'), 8); 
-	LET Var = if(Len(vAccessIndex) > 1,  Var & ' as [AccessKey]', Var & ' as ' & if(index(vAccessIndex, 'O') > 0, '[РНН организации]', if(index(vAccessIndex, 'K') > 0, '[Контрагенты.Вид]', if(index(vAccessIndex, 'S') > 0, '[Склады.Вид]',  if(index(vAccessIndex, 'N') > 0, '[Номенклатура.Вид]', if(index(vAccessIndex, 'Y') > 0, '[Годы]')))))); ENDIF
+	LET Var = mid(if(index(vAccessIndex, 'O') > 0, ' &''|''& SubField(if([РНН организации]  			= ''*'', ''$' & '(СписокРНН)'', [РНН организации]),  			Chr(10))') & 
+				  if(index(vAccessIndex, 'K') > 0, ' &''|''& SubField(if([Контрагенты.Вид]  			= ''*'', ''$' & '(СписокКон)'', [Контрагенты.Вид]),  			Chr(10))') &
+				  if(index(vAccessIndex, 'S') > 0, ' &''|''& SubField(if([Склады.Вид]  					= ''*'', ''$' & '(СписокСкл)'', [Склады.Вид]),  	 			Chr(10))') & 
+				  if(index(vAccessIndex, 'N') > 0, ' &''|''& SubField(if([Номенклатура.Вид] 			= ''*'', ''$' & '(СписокНом)'', [Номенклатура.Вид]), 			Chr(10))') &
+				  if(index(vAccessIndex, 'G') > 0, ' &''|''& SubField(if([Номенклатурные группы (1)] 	= ''*'', ''$' & '(СписокНгр)'', [Номенклатурные группы (1)]), 	Chr(10))') &
+				  if(index(vAccessIndex, 'Y') > 0, ' &''|''& SubField(if([Период] 						= ''*'', ''$' & '(СписокГод)'', [Период]), 			 			Chr(10))'), 8); 
+	LET Var = if(Len(vAccessIndex) > 1,  Var & ' as [AccessKey]', Var & ' as ' & if(index(vAccessIndex, 'O') > 0, '[РНН организации]', if(index(vAccessIndex, 'K') > 0, '[Контрагенты.Вид]', if(index(vAccessIndex, 'S') > 0, '[Склады.Вид]',  if(index(vAccessIndex, 'N') > 0, '[Номенклатура.Вид]',  if(index(vAccessIndex, 'G') > 0, '[Номенклатура.ГруппаДоступа]', if(index(vAccessIndex, 'Y') > 0, '[Годы]'))))))); ENDIF
 	[Table.97]: SELECT * FROM [Пользователи] Where $(vDocCondition) and len([Пользователь]) > 0; 
-	[Table.000]	:LOAD Upper(Доступ) as ACCESS, Upper(Пользователь) as NTNAME, [Вид доступа] as ВидДоступа, Upper([E-mail]) as MAIL, [Objects.Index], Expressions.Index as ExpIndex, Dimensions.Index as [DimIndex], SubField(Dimensions.Index, ',') as [Filters.Index], SubField(Settings.Index, ',') as [Settings.Index.1], $(Var) 				Resident [Table.97];  DROP Table [Table.97]; Section Access;  LOAD * Resident [Table.000]; Section Application; //
+//	[Table.000]	:LOAD Upper(Доступ) as ACCESS, Upper(Пользователь) as NTNAME, [Вид доступа] as ВидДоступа, Upper([E-mail]) as MAIL, [Objects.Index], Expressions.Index as ExpIndex, Dimensions.Index as [DimIndex], SubField(Dimensions.Index, ',') as [Filters.Index], SubField(Settings.Index, ',') as [Settings.Index.1], $(Var) 				Resident [Table.97];  DROP Table [Table.97]; Section Access;  LOAD * Resident [Table.000]; Section Application; //
+	[Table.000]	:LOAD Upper(Доступ) as ACCESS, Upper(Пользователь) as NTNAME, [Вид доступа] as ВидДоступа, Upper([E-mail]) as MAIL, [Objects.Index], Expressions.Index as ExpIndex, Dimensions.Index as [DimIndex], $(Var) 				Resident [Table.97];  Section Access;  LOAD * Resident [Table.000]; Section Application; //
+	[Table.001]	:LOAD Upper(Пользователь) as NTNAME, SubField(Dimensions.Index, ',') as [Filters.Index], SubField(Settings.Index, ',') as [Settings.Index.1]				Resident [Table.97];  DROP Table [Table.97]; 
 ENDSUB
 
 //SUB Индекс; LET 'Номер документа' = $(Номер документа); ENDSUB //	Получение индекса документа из переменной
@@ -170,22 +174,24 @@ SUB ЗаменаСсылок										//  Замена ссылок органи
 ENDSUB
 
 SUB AccessKey										//  AccessKey
-	IF index(vAccessIndex, 'O') > 0 then; [Table.99]:			LOAD Distinct [Организации.Ссылка],  [РНН организации]  as  [Field.1] FROM [$(vQvPath)\QVD\Справочники\Организации*.qvd] 	(qvd) Where Exists(Организации.Ссылка);  Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF
-	IF index(vAccessIndex, 'K') > 0 then; [Table.99]:			LOAD Distinct [Контрагенты.Ссылка],  [Контрагенты.Вид]  as  [Field.2] FROM [$(vQvPath)\QVD\Справочники\Контрагенты*.qvd] 	(qvd) Where Exists(Контрагенты.Ссылка);  Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF
-	IF index(vAccessIndex, 'S') > 0 then; [Table.99]:			LOAD Distinct [Склады.Ссылка],  	 [Склады.Вид]  		as  [Field.3] FROM [$(vQvPath)\QVD\Справочники\Склады*.qvd] 		(qvd) Where Exists(Склады.Ссылка);  	 Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF
-	IF index(vAccessIndex, 'N') > 0 then; [Table.99]:			LOAD Distinct [Номенклатура.Ссылка], [Номенклатура.Вид] as  [Field.4] FROM [$(vQvPath)\QVD\Справочники\Номенклатура*.qvd] 	(qvd) Where Exists(Номенклатура.Ссылка); Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF 
+	IF index(vAccessIndex, 'O') > 0 then; [Table.99]:			LOAD Distinct [Организации.Ссылка],  [РНН организации]  			as  [Field.1] FROM [$(vQvPath)\QVD\Справочники\Организации*.qvd] 	(qvd) Where Exists(Организации.Ссылка);  Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF
+	IF index(vAccessIndex, 'K') > 0 then; [Table.99]:			LOAD Distinct [Контрагенты.Ссылка],  [Контрагенты.Вид]  			as  [Field.2] FROM [$(vQvPath)\QVD\Справочники\Контрагенты*.qvd] 	(qvd) Where Exists(Контрагенты.Ссылка);  Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF
+	IF index(vAccessIndex, 'S') > 0 then; [Table.99]:			LOAD Distinct [Склады.Ссылка],  	 [Склады.Вид]  					as  [Field.3] FROM [$(vQvPath)\QVD\Справочники\Склады*.qvd] 		(qvd) Where Exists(Склады.Ссылка);  	 Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF
+	IF index(vAccessIndex, 'N') > 0 then; [Table.99]:			LOAD Distinct [Номенклатура.Ссылка], [Номенклатура.Вид] 			as  [Field.4] FROM [$(vQvPath)\QVD\Справочники\Номенклатура*.qvd] 	(qvd) Where Exists(Номенклатура.Ссылка); Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF 
+	IF index(vAccessIndex, 'G') > 0 then; [Table.99]:			LOAD Distinct [Номенклатура.Ссылка], [Номенклатура.ГруппаДоступа] 	as  [Field.6] FROM [$(vQvPath)\QVD\Справочники\Номенклатура*.qvd] 	(qvd) Where Exists(Номенклатура.Ссылка); Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; ENDIF 
 
 	IF index(vAccessIndex, 'Y') > 0 then; [Table.99]: LOAD Distinct [НомерБазы], 0 as  [Field.9] FROM [$(vQvPath)\QVD\Справочники\Организации*.qvd] (qvd) Where Exists(Организации.Ссылка);  [Table.99]: LOAD '#' as [НомерБазы], 1 as  [Field.9] AutoGenerate 1; Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99];  		
 	[Table.99]: LOAD Distinct [Дата] as [$(Var.2)], Year([Дата]) as [Field.5], 0 as [Field.9] Resident [Table.01]; [Table.99]: LOAD Distinct [Дата] as [$(Var.2)], Year(Today()) as [Field.5], 1 as [Field.9] Resident [Table.01]; Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99]; DROP Field [Field.9]; ENDIF; 																																					
 
 	[Table.99]: LOAD '' as [Field.0] AutoGenerate 1; LET Var.1 = '';
-	IF index(vAccessIndex, 'O') > 0 then; Left Join (Table.99) LOAD Distinct [РНН организации]  as  [Field.1] FROM [$(vQvPath)\QVD\Справочники\Организации*.qvd]  (qvd) Where Exists(Организации.Ссылка);  LET Var.1 = Var.1 & ',[Field.1]'; ENDIF
-	IF index(vAccessIndex, 'K') > 0 then; Left Join (Table.99) LOAD Distinct [Контрагенты.Вид]  as  [Field.2] FROM [$(vQvPath)\QVD\Справочники\Контрагенты*.qvd]  (qvd) Where Exists(Контрагенты.Ссылка);  LET Var.1 = Var.1 & ',[Field.2]'; ENDIF
-	IF index(vAccessIndex, 'S') > 0 then; Left Join (Table.99) LOAD Distinct [Склады.Вид]  		as  [Field.3] FROM [$(vQvPath)\QVD\Справочники\Склады*.qvd]  	  (qvd) Where Exists(Склады.Ссылка);  	   LET Var.1 = Var.1 & ',[Field.3]'; ENDIF
-	IF index(vAccessIndex, 'N') > 0 then; Left Join (Table.99) LOAD Distinct [Номенклатура.Вид] as  [Field.4] FROM [$(vQvPath)\QVD\Справочники\Номенклатура*.qvd] (qvd) Where Exists(Номенклатура.Ссылка); LET Var.1 = Var.1 & ',[Field.4]'; ENDIF 
-	IF index(vAccessIndex, 'Y') > 0 then; Left Join (Table.99) LOAD Distinct [Годы] 			as  [Field.5] Resident [Table.01]; 	  															   LET Var.1 = Var.1 & ',[Field.5]'; ENDIF 
+	IF index(vAccessIndex, 'O') > 0 then; Left Join (Table.99) LOAD Distinct [РНН организации]  			as  [Field.1] FROM [$(vQvPath)\QVD\Справочники\Организации*.qvd]  (qvd) Where Exists(Организации.Ссылка);  LET Var.1 = Var.1 & ',[Field.1]'; ENDIF
+	IF index(vAccessIndex, 'K') > 0 then; Left Join (Table.99) LOAD Distinct [Контрагенты.Вид]  			as  [Field.2] FROM [$(vQvPath)\QVD\Справочники\Контрагенты*.qvd]  (qvd) Where Exists(Контрагенты.Ссылка);  LET Var.1 = Var.1 & ',[Field.2]'; ENDIF
+	IF index(vAccessIndex, 'S') > 0 then; Left Join (Table.99) LOAD Distinct [Склады.Вид]  					as  [Field.3] FROM [$(vQvPath)\QVD\Справочники\Склады*.qvd]  	  (qvd) Where Exists(Склады.Ссылка);  	   LET Var.1 = Var.1 & ',[Field.3]'; ENDIF
+	IF index(vAccessIndex, 'N') > 0 then; Left Join (Table.99) LOAD Distinct [Номенклатура.Вид] 			as  [Field.4] FROM [$(vQvPath)\QVD\Справочники\Номенклатура*.qvd] (qvd) Where Exists(Номенклатура.Ссылка); LET Var.1 = Var.1 & ',[Field.4]'; ENDIF 
+	IF index(vAccessIndex, 'G') > 0 then; Left Join (Table.99) LOAD Distinct [Номенклатура.ГруппаДоступа] 	as  [Field.6] FROM [$(vQvPath)\QVD\Справочники\Номенклатура*.qvd] (qvd) Where Exists(Номенклатура.Ссылка); LET Var.1 = Var.1 & ',[Field.6]'; ENDIF 
+	IF index(vAccessIndex, 'Y') > 0 then; Left Join (Table.99) LOAD Distinct [Годы] 						as  [Field.5] Resident [Table.01]; 	  															   		   LET Var.1 = Var.1 & ',[Field.5]'; ENDIF 
 
-	LET Var = Mid(if(index(vAccessIndex, 'O') > 0, ' &''|''& [Field.1]') & if(index(vAccessIndex, 'K') > 0, ' &''|''& [Field.2]') & if(index(vAccessIndex, 'S') > 0, ' &''|''& [Field.3]') & if(index(vAccessIndex, 'N') > 0, ' &''|''& [Field.4]') & if(index(vAccessIndex, 'Y') > 0, ' &''|''& [Field.5]'), 8); LET Var.1 = mid(Var.1, 2);
+	LET Var = Mid(if(index(vAccessIndex, 'O') > 0, ' &''|''& [Field.1]') & if(index(vAccessIndex, 'K') > 0, ' &''|''& [Field.2]') & if(index(vAccessIndex, 'S') > 0, ' &''|''& [Field.3]') & if(index(vAccessIndex, 'N') > 0, ' &''|''& [Field.4]') & if(index(vAccessIndex, 'G') > 0, ' &''|''& [Field.6]') & if(index(vAccessIndex, 'Y') > 0, ' &''|''& [Field.5]'), 8); LET Var.1 = mid(Var.1, 2);
 	DROP Field [Field.0]; Left Join (Table.99) 	LOAD *, $(Var) as [AccessKey] Resident [Table.99]; Left Join (Table.00) LOAD * Resident [Table.99]; DROP Table [Table.99];  DROP Fields $(Var.1); 
 ENDSUB
 
@@ -1202,8 +1208,8 @@ SUB Conf.6; $(vConfigConnection);
 	[Таблица3]: LOAD Distinct [Затрата.Ссылка] as [Номенклатура.Ссылка], '1' as Сырье FROM [c:\qlikview\QVD\Себестоимость заводов\*.qvd] (qvd) Where [Затрата.Ссылка] like '*$*' and [ВидЗатрат] = 'Сырье';
 	Left Join(Таблица0) LOAD * Resident [Таблица3]; DROP Table [Таблица3]; 
 	
+	[Таблица1]: LOAD *, If(Match([Номенклатурные группы (1)], 'Сыр', 'Сыр плавленный'), 'Сыр', 'Прочее') as [Номенклатура.ГруппаДоступа] Resident [Таблица0]; DROP Table [Таблица0]; RENAME Table [Таблица1] to [Таблица0]; 
 	
-
 ENDSUB
 
 SUB ЗаполнитьПараметры
