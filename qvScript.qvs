@@ -56,7 +56,7 @@ SUB SectionAccess
 				  if(index(vAccessIndex, 'K') > 0, ' &''|''& SubField(if([Контрагенты.Вид]  			= ''*'', ''$' & '(СписокКон)'', [Контрагенты.Вид]),  			Chr(10))') &
 				  if(index(vAccessIndex, 'S') > 0, ' &''|''& SubField(if([Склады.Вид]  					= ''*'', ''$' & '(СписокСкл)'', [Склады.Вид]),  	 			Chr(10))') & 
 				  if(index(vAccessIndex, 'N') > 0, ' &''|''& SubField(if([Номенклатура.Вид] 			= ''*'', ''$' & '(СписокНом)'', [Номенклатура.Вид]), 			Chr(10))') &
-				  if(index(vAccessIndex, 'G') > 0, ' &''|''& SubField(if([Номенклатурные группы (1)] 	= ''*'', ''$' & '(СписокНгр)'', [Номенклатурные группы (1)]), 	Chr(10))') &
+				  if(index(vAccessIndex, 'G') > 0, ' &''|''& SubField(if([Номенклатура.ГруппаДоступа] 	= ''*'', ''$' & '(СписокНгр)'', [Номенклатура.ГруппаДоступа]), 	Chr(10))') &
 				  if(index(vAccessIndex, 'Y') > 0, ' &''|''& SubField(if([Период] 						= ''*'', ''$' & '(СписокГод)'', [Период]), 			 			Chr(10))'), 8); 
 	LET Var = if(Len(vAccessIndex) > 1,  Var & ' as [AccessKey]', Var & ' as ' & if(index(vAccessIndex, 'O') > 0, '[РНН организации]', if(index(vAccessIndex, 'K') > 0, '[Контрагенты.Вид]', if(index(vAccessIndex, 'S') > 0, '[Склады.Вид]',  if(index(vAccessIndex, 'N') > 0, '[Номенклатура.Вид]',  if(index(vAccessIndex, 'G') > 0, '[Номенклатура.ГруппаДоступа]', if(index(vAccessIndex, 'Y') > 0, '[Годы]'))))))); ENDIF
 	[Table.97]: SELECT * FROM [Пользователи] Where $(vDocCondition) and len([Пользователь]) > 0; 
