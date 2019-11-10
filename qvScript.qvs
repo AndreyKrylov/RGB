@@ -1227,25 +1227,42 @@ SUB ЗаполнитьПараметры
 	Группа2: LOAD 	'''*'&Concat(Distinct Группа2_1, '*'',''*', RecNo())&'*''' as Группа2_1, ''''&Concat(Distinct Группа2_2, ''',''', RecNo())&'''' as Группа2_2 FROM [C:\QlikView\Config\Settings.xls] (biff, embedded labels, table is [37$]);
 		vГруппа2_1 = Peek('Группа2_1'); vГруппа2_2 = Peek('Группа2_2'); DROP Tables Группа2;
 	
+//	Temp_1: 
+//	LOAD *, '"'&SubField(Номенклатура, '"', 2)&'"' 																										as Бренд, 
+//		 Pick(WildMatch(Номенклатура, $(vБренды_1)), $(vБренды_2)) 																						as Бренд_2,
+//		 Pick(WildMatch(Номенклатура, $(vУпаковка_1)), $(vУпаковка_2)) 																					as Упаковка,
+//		 Pick(WildMatch(Номенклатура, $(vГруппа_1)), $(vГруппа_2)) 																						as Группа,
+//		 Pick(WildMatch(Номенклатура, $(vГруппа2_1)), $(vГруппа2_2)) 																					as Группа2,
+//		 KeepChar(Replace(Номенклатура, If(SubStringCount(Номенклатура, '%') > 0, Right(SubField(Номенклатура, '%', 1), 4), ''), ''), '1234567890,.') 	as Вес,
+//		 Replace(KeepChar(Right(SubField(Номенклатура, '%', 1), 4), '1234567890,.%'), '.', ',') 														as Жирность
+//	Resident [Таблица1]; DROP Table [Таблица1];
+//	
+//	Temp_2: LOAD *, 
+//		PurgeChar(Mid(Жирность, FindOneOf(Жирность, '1234567890')), '%') 	as жирность, 
+//		If(Бренд = '""', Бренд_2, Бренд) 									as бренд, 
+//		If(Группа = 'Акции', 'Акция', Группа) 								as Группа3, 
+//		Replace(Mid(Вес, FindOneOf(Вес, '1234567890')), '.', ',') 			as вес
+//	Resident Temp_1 Where Len(Trim(Номенклатура)) > 0; DROP Table Temp_1; CALL RenameField('жирность');  CALL RenameField('бренд');  CALL RenameField('вес'); 
+//	Temp_3: LOAD *, Num(If(SubStringCount(Вес, ',') <= 1 and IsNum(Right(Вес, 1)), Вес, If(SubStringCount(Вес, ',') = 1 or Index(Вес, ',', 1) + 1 = Index(Вес, ',', 2), SubField(Вес, ',', 1), Left(Вес, Index(Вес, ',', 2) - 1)))) as вес  Resident Temp_2; DROP Table Temp_2; CALL RenameField('вес'); 
+//	Temp_4: LOAD *, Вес / If(Вес > 1 and WildMatch(Номенклатура, '* гр.*', '* гр *', '*'& Вес & 'г *', '*'& Вес & 'г. *', '*'& Вес & 'гр.*', '*'& Вес & 'гр *'), 1000, 1) as вес  Resident Temp_3; DROP Table Temp_3; CALL RenameField('вес'); 
+//	Temp_5: LOAD *, If(Группа2 = 'Мороженое', If(Вес <= 0.4, 'Упаковка', If(Вес > 0.4, 'Вес')), Упаковка) as упаковка  Resident Temp_4; DROP Table Temp_4; CALL RenameField('упаковка'); 
+
+
 	Temp_1: 
-	LOAD *, '"'&SubField(Номенклатура, '"', 2)&'"' 																										as Бренд, 
-		 Pick(WildMatch(Номенклатура, $(vБренды_1)), $(vБренды_2)) 																						as Бренд_2,
-		 Pick(WildMatch(Номенклатура, $(vУпаковка_1)), $(vУпаковка_2)) 																					as Упаковка,
-		 Pick(WildMatch(Номенклатура, $(vГруппа_1)), $(vГруппа_2)) 																						as Группа,
-		 Pick(WildMatch(Номенклатура, $(vГруппа2_1)), $(vГруппа2_2)) 																					as Группа2,
-		 KeepChar(Replace(Номенклатура, If(SubStringCount(Номенклатура, '%') > 0, Right(SubField(Номенклатура, '%', 1), 4), ''), ''), '1234567890,.') 	as Вес,
-		 Replace(KeepChar(Right(SubField(Номенклатура, '%', 1), 4), '1234567890,.%'), '.', ',') 														as Жирность
-	Resident [Таблица1]; DROP Table [Таблица1];
+	LOAD Номенклатура, Код, '"'&SubField(Номенклатура, '"', 2)&'"' as Бренд, 
+		 Pick(WildMatch(Номенклатура, $(vБренды_1)), $(vБренды_2)) as Бренд_2,
+		 Pick(WildMatch(Номенклатура, $(vУпаковка_1)), $(vУпаковка_2)) as Упаковка,
+		 Pick(WildMatch(Номенклатура, $(vГруппа_1)), $(vГруппа_2)) as Группа,
+		 Pick(WildMatch(Номенклатура, $(vГруппа2_1)), $(vГруппа2_2)) as Группа2,
+		 Text(KeepChar(Replace(Replace(Номенклатура, If(SubStringCount(Номенклатура, '%') > 0, Right(SubField(Номенклатура, '%', 1), 4), ''), ''), 'КЗ ДЛПП №1', ''), '1234567890,.')) as Вес,
+		 If(SubStringCount(Номенклатура, '%') > 0, Replace(KeepChar(Right(SubField(Номенклатура, '%', 1), 4), '1234567890,.%'), '.', ','), '') as Жирность
+	FROM [C:\QlikView\Config\Settings.xls] (biff, embedded labels, table is [37$]);
 	
-	Temp_2: LOAD *, 
-		PurgeChar(Mid(Жирность, FindOneOf(Жирность, '1234567890')), '%') 	as жирность, 
-		If(Бренд = '""', Бренд_2, Бренд) 									as бренд, 
-		If(Группа = 'Акции', 'Акция', Группа) 								as Группа3, 
-		Replace(Mid(Вес, FindOneOf(Вес, '1234567890')), '.', ',') 			as вес
-	Resident Temp_1 Where Len(Trim(Номенклатура)) > 0; DROP Table Temp_1; CALL RenameField('жирность');  CALL RenameField('бренд');  CALL RenameField('вес'); 
+	Temp_2: LOAD *, PurgeChar(Mid(Жирность, FindOneOf(Жирность, '1234567890')), '%') as жирность, If(Бренд = '""', Бренд_2, Бренд) as бренд, If(Группа = 'Акции', 'Акция', Группа) as Группа3, 
+		Replace(Mid(Вес, FindOneOf(Вес, '1234567890')), '.', ',') as вес Resident Temp_1 Where Len(Trim(Номенклатура)) > 0; DROP Table Temp_1; CALL RenameField('жирность');  CALL RenameField('бренд');  CALL RenameField('вес'); 
 	Temp_3: LOAD *, Num(If(SubStringCount(Вес, ',') <= 1 and IsNum(Right(Вес, 1)), Вес, If(SubStringCount(Вес, ',') = 1 or Index(Вес, ',', 1) + 1 = Index(Вес, ',', 2), SubField(Вес, ',', 1), Left(Вес, Index(Вес, ',', 2) - 1)))) as вес  Resident Temp_2; DROP Table Temp_2; CALL RenameField('вес'); 
-	Temp_4: LOAD *, Вес / If(Вес > 1 and WildMatch(Номенклатура, '* гр.*', '* гр *', '*'& Вес & 'г *', '*'& Вес & 'г. *', '*'& Вес & 'гр.*', '*'& Вес & 'гр *'), 1000, 1) as вес  Resident Temp_3; DROP Table Temp_3; CALL RenameField('вес'); 
-	Temp_5: LOAD *, If(Группа2 = 'Мороженое', If(Вес <= 0.4, 'Упаковка', If(Вес > 0.4, 'Вес')), Упаковка) as упаковка  Resident Temp_4; DROP Table Temp_4; CALL RenameField('упаковка'); 
+	Temp_4: LOAD *, Вес / If((Вес > 1 and WildMatch(Номенклатура, '* гр.*', '* гр *', '*'& Вес & 'г *', '*'& Вес & ' г *', '*'& Вес & 'г.*', '*'& Вес & ' г.*', '*'& Вес & 'г,*', '*'& Вес & ' г,*', '*'& Вес & 'гр *', '*'& Вес & ' гр *', '*'& Вес & 'гр.*', '*'& Вес & ' гр.*', '*'& Вес & 'гр,*', '*'& Вес & ' гр,*', '*'& Вес & ' мл.*', '*'& Вес & 'мл.*', '*'& Вес & ' мл,*', '*'& Вес & 'мл,*', '*'& Вес & ' мл *', '*'& Вес & 'мл *')) or Вес > 50, 1000, 1) as вес  Resident Temp_3; DROP Table Temp_3; CALL RenameField('вес'); 
+	Temp_5: LOAD *, Num(Вес) as НомВес, Right('000000000'& Код, 9) as НомКод, If(Группа2 = 'Мороженое', If(Вес <= 0.4, 'Упаковка', If(Вес > 0.4, 'Вес')), Упаковка) as упаковка  Resident Temp_4; DROP Table Temp_4; CALL RenameField('упаковка'); 
 
 	CALL FillEmptyValues('Temp_5', 'Номенклатурные группы (1)')
 	RENAME Fields Бренд to Бренды, Группа to [Номенклатурные группы (1)], Группа2 to [Номенклатурные группы (2)], Группа3 to [Номенклатурные группы (4)], Вес to [Вес номенклатуры]; 
