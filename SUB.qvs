@@ -1,4 +1,4 @@
-﻿SET ThousandSep=' ';
+SET ThousandSep=' ';
 SET DecimalSep=',';
 SET MoneyThousandSep=' ';
 SET MoneyDecimalSep=',';
@@ -14,7 +14,7 @@ SET DayNames='Пн;Вт;Ср;Чт;Пт;Сб;Вс';
  vDateSplit		= MonthStart(AddMonths(WeekStart(Date(Today() + If(Num(WeekDay(Today())) = 6, 1, 0))), - 3));
  vDateAdd		= Date(Today()-20); 
 
- vLoadType		= Pick(Match(-1, Num(WeekDay(Today())) = 6 and Hour(Now()) < 8, Num(WeekDay(Today())) = 6 or Hour(Now()) < 8, -1), 'Full', 'Night', 'Day');
+ vLoadType		= If(vList.LoadType = 'Default' or IsNull(vList.LoadType), Pick(Match(-1, Num(WeekDay(Today())) = 6 and Hour(Now()) < 8, Num(WeekDay(Today())) = 6 or Hour(Now()) < 8, -1), 'Full', 'Night', 'Day'), vList.LoadType);
  vLoadFlag		= If(vLoadType = 'Full', '*', 2);
  
  vNotEmpty 		= 'Len($1) > 0 and $1 <> 0 and $1 <> ''01.01.1753 0:00:00''';
@@ -642,6 +642,8 @@ ENDSUB
 
 [SelectTypeCR]: LOAD SubField('Select & script,Comon select,Comon script,Random select,Random script,None', ',') as SelectTypeCR AutoGenerate 1;
 [SelectType01]: LOAD SubField('Select 0,Select 1', ',') as SelectType01 AutoGenerate 1;
+[LoadType]: LOAD SubField('Default,Full,Night,Day', ',') as LoadType AutoGenerate 1;
+
 IF vRebuild THEN; CALL MetaLoad; ELSE; CALL MetaBuild; ENDIF
 $(vConString);
  
