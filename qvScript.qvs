@@ -342,7 +342,8 @@ IF SubField(DocumentName(), '.', 1) = 'Остатки' then ; CALL Загруз�
 	[Table.01]: 	LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] 				(qvd) Where Дата >= '01.01.2011';
 	[Table.02]: 	LOAD * FROM [$(vQvPath)\QVD\# КалендарьДвижений.qvd] 		(qvd) Where ДатаДвижения >= '01.01.2011' and ДатаДвижения < MonthStart($(vDocuments.RenewDate));
 	[Table.00]: 	LOAD * FROM [$(vQvPath)\QVD\Остатки\База*.qvd] 				(qvd) Where Exists(ДатаДвижения);
-	[Table.00]: 	LOAD * FROM [$(vQvPath)\QVD\ОбновлениеОстатков.qvd] 		(qvd);
+	[Table.00]: 	LOAD * FROM [$(vQvPath)\QVD\ОбновлениеОстатков.qvd] 		(qvd); Left Join
+	(Table.00) 	LOAD *, Дата as [ДатаДвижения] FROM [$(vQvPath)\QVD\# СебестоимостьПоступления.qvd] (qvd); DROP Field Дата From [Table.00];
 	[Table.02]:  	LOAD * FROM [$(vQvPath)\QVD\# КалендарьДвижений.qvd] 		(qvd) Where ДатаДвижения >= MonthStart($(vDocuments.RenewDate)) or ДатаДвижения < '01.01.2011';
 	[Table.11]: 	LOAD * FROM [$(vQvPath)\QVD\Справочники\Организации*.qvd] 	(qvd) Where Exists(Организации.Ссылка);
 	[Table.12]: 	LOAD * FROM [$(vQvPath)\QVD\Справочники\Склады*.qvd] 		(qvd) Where Exists(Склады.Ссылка);
