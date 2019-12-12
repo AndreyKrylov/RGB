@@ -375,14 +375,14 @@ IF SubField(DocumentName(), '.', 1) = 'Поступление' then ; CALL За�
 CALL Выход; ENDIF
 
 IF SubField(DocumentName(), '.', 1) = 'Реализация и остатки' then ; CALL Загрузка
-	[Table.01]: LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] 				(qvd) Where Дата >=  MonthStart(AddMonths(Today(), - 18)); //MonthStart(AddMonths(Today(), - 6)); // '01.01.2017'
+	[Table.01]: LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] 				(qvd) Where Дата >=  MonthStart(AddMonths(Today(), - 24)); //MonthStart(AddMonths(Today(), - 6)); // '01.01.2017'
 	[Table.00]: LOAD  [НомерБазы], [Дата], [Документ], [Организации.Ссылка], '#' as [Склады.Ссылка], [Валюты.Ссылка], [Номенклатура.Ссылка], [Контрагенты.Ссылка], [Количество], [Сумма], [Вес] FROM [$(vQvPath)\QVD\Реализация\*.qvd] (qvd) Where Exists(Дата); Left Join (Table.00) LOAD 3 as [ВидДвижения] AutoGenerate 1; Left Join 
 	(Table.00)  LOAD [Дата], [Дата] as [ДатаДвижения] Resident [Table.01]; DROP Table [Table.01]; DROP Field [Дата]; ; CALL МаркерыДистров; CALL ЗаменаСсылок; STORE [Table.00] into [$(vQvPath)\QVD\Temp.qvd] (qvd); DROP Table [Table.00]; [Table.01]: LOAD * FROM [$(vQvPath)\QVD\# Календарь.qvd] (qvd);
 
-	[Table.02]: LOAD * FROM [$(vQvPath)\QVD\# КалендарьДвижений.qvd] 		(qvd) Where ДатаДвижения >= MonthStart(AddMonths(Today(), - 18)) and ДатаДвижения < MonthStart($(vDocuments.RenewDate));  // '01.01.2015';
+	[Table.02]: LOAD * FROM [$(vQvPath)\QVD\# КалендарьДвижений.qvd] 		(qvd) Where ДатаДвижения >= MonthStart(AddMonths(Today(), - 24)) and ДатаДвижения < MonthStart($(vDocuments.RenewDate));  // '01.01.2015';
 	[Table.00]: LOAD * FROM [$(vQvPath)\QVD\Остатки\База*.qvd] 				(qvd) Where Exists(ДатаДвижения); Concatenate 
    	(Table.00)  LOAD * FROM [$(vQvPath)\QVD\ОбновлениеОстатков.qvd] 		(qvd); Left Join (Table.00)	LOAD 'Остатки' as [Документ], 0 as [Вес], '#' as [Контрагенты.Ссылка], '#' as [Валюты.Ссылка] AutoGenerate 1;      
-	[Table.02]: LOAD * FROM [$(vQvPath)\QVD\# КалендарьДвижений.qvd] 		(qvd) Where ДатаДвижения >= MonthStart($(vDocuments.RenewDate)) or ДатаДвижения < MonthStart(AddMonths(Today(), - 18)); // '01.01.2015';
+	[Table.02]: LOAD * FROM [$(vQvPath)\QVD\# КалендарьДвижений.qvd] 		(qvd) Where ДатаДвижения >= MonthStart($(vDocuments.RenewDate)) or ДатаДвижения < MonthStart(AddMonths(Today(), - 24)); // '01.01.2015';
 
 	[Table.00]:  LOAD * FROM [$(vQvPath)\QVD\Temp.qvd] 						(qvd); 
 
